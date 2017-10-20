@@ -12,10 +12,13 @@ class GnomadVcfParser:
         vcf_reader = vcf.Reader(open(self.path_g_vcf, "rb"))
         g_hash = {}
         for line in vcf_reader:
-            key = "_".join([str(line.CHROM),str(line.POS),line.REF])
-            val = line.INFO['AF']
-            g_hash[key] = val
+            for alt, val in zip(line.ALT, line.INFO['AF']):
+                key = "_".join([str(line.CHROM),str(line.POS),line.REF,str(alt)])
+                g_hash[key] = val
         return(g_hash)
 
 parser = GnomadVcfParser("/Users/kkrysiak/git/gnomad_annotation/test.gnomad.vcf.gz")
 parsed_vcf = parser.parse_vcf()
+print(parsed_vcf['1_13538_G_A'])
+
+# print(parsed_vcf['1_13538_G_A'])
