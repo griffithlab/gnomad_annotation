@@ -9,7 +9,7 @@ class GnomadVcfParser:
         vcf_reader = vcf.Reader(open(self.path_g_vcf, "rb"))
         g_hash = {}
         # reads in the vcf line by line
-        for line in vcf_reader:
+        for line in vcf_reader.fetch('1',70034300,103471500):
             # Simultaneously iterates over the three lists (alt allele, alt allele freq, alt allele count)
             # For each iteration i (allele), gets the values at position i (all values for that allele)
             for alt, af, ac in zip(line.ALT, line.INFO['AF'], line.INFO['AC']):
@@ -27,7 +27,7 @@ class GnomadVcfParser:
 
     # Removes extra bases added to allow for collapsing of nearby indels into multi-allele VCF representation
     # Provides new start, ref, alt
-    # Stolen from http://www.cureffi.org/2014/04/24/converting-genetic-variants-to-their-minimal-representation/
+    # Adapted from http://www.cureffi.org/2014/04/24/converting-genetic-variants-to-their-minimal-representation/
     @classmethod
     def get_minimal_representation(cls, pos, ref, alt):
         # If it's a simple SNV, don't remap anything
@@ -44,14 +44,14 @@ class GnomadVcfParser:
                 alt = alt[1:]
                 ref = ref[1:]
                 pos += 1
-            #
+            # convert to mgi format for insertions/deltions
             if (len(alt) > len(ref)):
                 alt = alt[1:]
                 ref = "-"
-                pos += 1
             elif (len(alt) < len(ref)):
                 alt = "-"
                 ref = ref[1:]
+                # Removing first base of the reference allele so increment position
                 pos += 1
             print(pos, ref, alt)
             return pos, ref, alt

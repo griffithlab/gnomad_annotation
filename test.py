@@ -1,7 +1,8 @@
 from gnomad_vcf_parser import GnomadVcfParser
 import csv
 
-parser = GnomadVcfParser("/Users/kkrysiak/git/gnomad_annotation/test.gnomad.vcf.gz")
+#parser = GnomadVcfParser("/Users/kkrysiak/git/gnomad_annotation/test.gnomad.vcf.gz")
+parser = GnomadVcfParser("/gscmnt/gc2560/core/model_data/genome-db-ensembl-gnomad/e6fedd72a7c046a895e2647f06625171/gnomad.exomes.r2.0.1.sites.noVEP.vcf.gz")
 parsed_vcf = parser.parse_vcf()
 print(parsed_vcf)
 
@@ -24,9 +25,9 @@ with open("test_MGIannotation.tsv", "r") as mgi_tsv, open("outfile.tsv", "w") as
             mgi_key = mgi_key.replace("-","0")
         if mgi_key in parsed_vcf:
             new_line = line.copy()
-            new_line["gnomAD_AC"] = parsed_vcf[mgi_alt_key]['ac']
-            new_line["gnomAD_AN"] = parsed_vcf[mgi_alt_key]['an']
-            new_line["gnomAD_AF"] = parsed_vcf[mgi_alt_key]['af']
+            new_line["gnomAD_AC"] = parsed_vcf[mgi_key]['ac']
+            new_line["gnomAD_AN"] = parsed_vcf[mgi_key]['an']
+            new_line["gnomAD_AF"] = parsed_vcf[mgi_key]['af']
             mgi_tsv_writer.writerow(new_line)
         else:
             new_line = line.copy()
