@@ -33,7 +33,7 @@ class GnomadVcfParser:
         # If it's a simple SNV, don't remap anything
         if len(ref) == 1 and len(alt) == 1:
             return pos, ref, alt
-        # Handle indels
+        # Process indels
         else:
             # strip off identical suffixes
             while (alt[-1] == ref[-1] and min(len(alt), len(ref)) > 1):
@@ -44,5 +44,14 @@ class GnomadVcfParser:
                 alt = alt[1:]
                 ref = ref[1:]
                 pos += 1
-            # print 'returning: ', pos, ref, alt
+            #
+            if (len(alt) > len(ref)):
+                alt = alt[1:]
+                ref = "-"
+                pos += 1
+            elif (len(alt) < len(ref)):
+                alt = "-"
+                ref = ref[1:]
+                pos += 1
+            print(pos, ref, alt)
             return pos, ref, alt
