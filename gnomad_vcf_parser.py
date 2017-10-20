@@ -10,11 +10,12 @@ class GnomadVcfParser:
         self.path_g_vcf = path_g_vcf
     def parse_vcf(self):
         vcf_reader = vcf.Reader(open(self.path_g_vcf, "rb"))
+        g_hash = {}
         for line in vcf_reader:
-            import pdb
-            pdb.set_trace()
-            pass
-
+            key = "_".join([str(line.CHROM),str(line.POS),line.REF])
+            val = line.INFO['AF']
+            g_hash[key] = val
+        return(g_hash)
 
 parser = GnomadVcfParser("/Users/kkrysiak/git/gnomad_annotation/test.gnomad.vcf.gz")
 parsed_vcf = parser.parse_vcf()
