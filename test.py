@@ -11,14 +11,14 @@ input_parser.add_argument(
     help="gnomAD data type to use. Whole genome or exome.",
 )
 input_parser.add_argument(
-    'output_file',
-    type=argparse.FileType('w'),
-    help="Final, gnomAD annotated output .tsv file name and location.",
-)
-input_parser.add_argument(
     'input_file',
     type=argparse.FileType('r'),
     help="5 column, 1-based, tab-separated input file with header to be annotated with gnomAD allele frequencies.",
+)
+input_parser.add_argument(
+    'output_file',
+    type=argparse.FileType('w'),
+    help="Final, gnomAD annotated output .tsv file name and location.",
 )
 input_parser.add_argument(
     '--build',
