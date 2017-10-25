@@ -68,14 +68,9 @@ with open(args.input_file.name, "r") as mgi_tsv, open(args.output_file.name, "w"
         # Print progress to user
         if my_chr != str(line["chromosome_name"]):
             if str(line["chromosome_name"]) == 'Y':
-                print("gnomAD doesn't support chromosome Y, skipping these variants")
-                    new_line = line.copy()
-                    new_line[ac_head] = "NA"
-                    new_line[an_head] = "NA"
-                    new_line[af_head] = "NA"
-                    mgi_tsv_writer.writerow(new_line)
-                continue
-            print("Processing chromosome", str(line["chromosome_name"]))
+                print("Warning: gnomAD doesn't support chromosome Y, skipping these variants")
+            else:
+                print("Processing chromosome", str(line["chromosome_name"]))
             my_chr = str(line["chromosome_name"])
         mgi_key = "_".join([str(line["chromosome_name"]),str(line["start"]),line["reference"],line["variant"]])
         if mgi_key not in parsed_vcf:
