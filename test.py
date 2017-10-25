@@ -6,6 +6,21 @@ input_parser = argparse.ArgumentParser(
     description="Annotate a 1-based, 5-column annotated variant file (MGI-annotation style)",
 )
 input_parser.add_argument(
+    'gnomad_type',
+    choices=['exomes', 'genomes'],
+    help="gnomAD data type to use. Whole genome or exome.",
+)
+input_parser.add_argument(
+    'output_file',
+    type=argparse.FileType('w'),
+    help="Final, gnomAD annotated output .tsv file name and location.",
+)
+input_parser.add_argument(
+    'input_file',
+    type=argparse.FileType('r'),
+    help="5 column, 1-based, tab-separated input file with header to be annotated with gnomAD allele frequencies.",
+)
+input_parser.add_argument(
     '--build',
     choices=['GRCH37', 'GRCH38'],
     default='GRCH37',
@@ -17,24 +32,7 @@ input_parser.add_argument(
     default='2.0.1',
     help="Version of gnomAD to be used. Default = 2.0.1"
 )
-input_parser.add_argument(
-    '--gnomad_type',
-    choices=['exomes', 'genomes'],
-    help="gnomAD data type to use. Whole genome or exome.",
-    required=True
-)
-input_parser.add_argument(
-    '--output_file',
-    type=argparse.FileType('w'),
-    help="Final, gnomAD annotated output .tsv file name and location.",
-    required=True
-)
-input_parser.add_argument(
-    '--input_file',
-    type=argparse.FileType('r'),
-    help="5 column, 1-based, tab-separated input file with header to be annotated with gnomAD allele frequencies.",
-    required=True
-)
+
 
 args = input_parser.parse_args()
 
