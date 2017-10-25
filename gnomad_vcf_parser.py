@@ -9,7 +9,6 @@ class GnomadVcfParser:
         vcf_reader = vcf.Reader(open(self.path_g_vcf, "rb"))
         g_hash = {}
         # reads in the vcf line by line
-        #for line in vcf_reader.fetch('1',70034300,103471500):
         for line in vcf_reader:
             # Simultaneously iterates over the three lists (alt allele, alt allele freq, alt allele count)
             # For each iteration i (allele), gets the values at position i (all values for that allele)
@@ -54,5 +53,4 @@ class GnomadVcfParser:
                 ref = ref[1:]
                 # Removing first base of the reference allele so increment position
                 pos += 1
-            print(pos, ref, alt)
             return pos, ref, alt

@@ -33,7 +33,6 @@ input_parser.add_argument(
     help="Version of gnomAD to be used. Default = 2.0.1"
 )
 
-
 args = input_parser.parse_args()
 
 
@@ -50,11 +49,8 @@ vcf_loc = {
 print(vcf_key)
 print("\nUsing gnomAD input: ", vcf_loc[vcf_key])
 
-#parser = GnomadVcfParser("/gscuser/kkrysiak/git/gnomad_annotation/test.gnomad.vcf.gz")
-#parser = GnomadVcfParser("/Users/kkrysiak/git/gnomad_annotation/test.gnomad.vcf.gz")
 parser = GnomadVcfParser(vcf_loc[vcf_key])
 parsed_vcf = parser.parse_vcf()
-#print(parsed_vcf)
 
 # Read in variant file and print new annotated file
 with open(args.input_file.name, "r") as mgi_tsv, open(args.output_file.name, "w") as outfile:
@@ -66,7 +62,21 @@ with open(args.input_file.name, "r") as mgi_tsv, open(args.output_file.name, "w"
     header_new = header + [ac_head,an_head,af_head]
     mgi_tsv_writer = csv.DictWriter(outfile, fieldnames=header_new, delimiter="\t")
     mgi_tsv_writer.writeheader()
+    my_chr = '1'
+    print("Processing chromosome", my_chr)    
     for line in mgi_tsv_reader:
+        # Print progress to user
+        if my_chr != str(line["chromosome_name"]):
+            if str(line["chromosome_name"]) == 'Y':
+                print("gnomAD doesn't support chromosome Y, skipping these variants")
+                    new_line = line.copy()
+                    new_line[ac_head] = "NA"
+                    new_line[an_head] = "NA"
+                    new_line[af_head] = "NA"
+                    mgi_tsv_writer.writerow(new_line)
+                continue
+            print("Processing chromosome", str(line["chromosome_name"]))
+            my_chr = str(line["chromosome_name"])
         mgi_key = "_".join([str(line["chromosome_name"]),str(line["start"]),line["reference"],line["variant"]])
         if mgi_key not in parsed_vcf:
             mgi_key = mgi_key.replace("-","0")
