@@ -2,16 +2,6 @@ from gnomad_vcf_parser import GnomadVcfParser
 import csv
 import os
 
-#parser = GnomadVcfParser("/Users/kkrysiak/git/gnomad_annotation/test.gnomad.vcf.gz")
-# print(parsed_vcf)
-
-# print(parsed_vcf['1_13538_G_A'])
-# print(parsed_vcf['1_13538_G_T'])
-
-build = '37'
-version = '2.0.1'
-gnomad_type = 'exome'
-
 
 def read_key_list(filename):
     g_hash = {}
@@ -25,11 +15,12 @@ def read_key_list(filename):
             g_hash[gnomad_key]['ac'] = line[2]
             # Only one allele number is provided for each position, regardless of # of alternative alleles
             g_hash[gnomad_key]['an'] = line[3]
-            #if line_number % 1000000 == 0:
-                #print('Read {} lines'.format(sizeof_fmt(line_number, base=1000.0, suffix='')))
     print('Done')
     return g_hash
 
+
+# check if dictionary exists
+# if it doesn't, then create it
 if not os.path.isfile('gnomad_exome_37_dict.tsv'):
     parser = GnomadVcfParser("/gscmnt/gc2560/core/model_data/genome-db-ensembl-gnomad/e6fedd72a7c046a895e2647f06625171/gnomad.exomes.r2.0.1.sites.noVEP.vcf.gz")
     parsed_vcf = parser.parse_vcf('gnomad_exome_37_dict.tsv')
