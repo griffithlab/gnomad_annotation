@@ -94,8 +94,10 @@ with open(args.input_file.name, "r") as mgi_tsv, open(file_out, "w") as outfile:
         mgi_tsv_fail_writer = csv.DictWriter(fail_file, fieldnames=header_new, delimiter="\t")
         mgi_tsv_fail_writer.writeheader()
         fail_counter = 0
+        pass_counter = 1
     counter = 0
     not_found_counter = 0
+    match_counter = 0
     my_chr = '1'
     print("\nProcessing chromosome", my_chr)    
     for line in mgi_tsv_reader:
@@ -115,6 +117,7 @@ with open(args.input_file.name, "r") as mgi_tsv, open(file_out, "w") as outfile:
             new_line[ac_head] = parsed_vcf[mgi_key]['ac']
             new_line[an_head] = parsed_vcf[mgi_key]['an']
             new_line[af_head] = parsed_vcf[mgi_key]['af']
+            match_counter += 1
             if args.cutoff == None:
                 mgi_tsv_writer.writerow(new_line)
             else:
@@ -123,6 +126,7 @@ with open(args.input_file.name, "r") as mgi_tsv, open(file_out, "w") as outfile:
                     fail_counter += 1
                 else:
                     mgi_tsv_writer.writerow(new_line)
+                    pass_counter += 1
         else:
             new_line = line.copy()
             new_line[ac_head] = "NA"
@@ -131,8 +135,10 @@ with open(args.input_file.name, "r") as mgi_tsv, open(file_out, "w") as outfile:
             mgi_tsv_writer.writerow(new_line)
             not_found_counter += 1
     print("\nTotal variants processed: ", counter)
-    print("Total variants not found in gnomAD: ", not_found_counter)
+    print("Total variants not found in gnomAD", args.gnomad_type, ": ", not_found_counter)
+    print("Total variants matched gnomAD", args.gnomad_type, ": ", match_counter)
     if args.cutoff != None:
-        print("Total variants failed allele frequency cutoff of ", args.cutoff, ":", fail_counter)
+        print("Total variants failed allele frequency cutoff of", args.cutoff, ": ", fail_counter)
+        print("Total variants passed allele frequency cutoff of", args.cutoff, ": ", pass_counter)
         fail_file.close()
     print("\n")
