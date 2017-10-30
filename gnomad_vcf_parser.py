@@ -8,8 +8,14 @@ class GnomadVcfParser:
         # create a reader object
         vcf_reader = vcf.Reader(open(self.path_g_vcf, "rb"))
         g_hash = {}
+        # create a string to print progress to user
+        prog = '1'
+        print("\nReading in gnomAD chromosome ", prog)
         # reads in the vcf line by line
         for line in vcf_reader:
+            if str(line.CHROM) != prog:
+                print("Reading in gnomAD chromosome ", str(line.CHROM))
+                prog = str(line.CHROM)
             # Simultaneously iterates over the three lists (alt allele, alt allele freq, alt allele count)
             # For each iteration i (allele), gets the values at position i (all values for that allele)
             for alt, af, ac in zip(line.ALT, line.INFO['AF'], line.INFO['AC']):
