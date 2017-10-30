@@ -37,19 +37,29 @@ input_parser.add_argument(
     type=float,
     help="Allele frequency cutoff to use to filter the file. Unless cutoff is defined, all va    riants are printed to one file."
 )
+input_parser.add_argument(
+    '--test',
+    action='store_true',
+    help=argparse.SUPPRESS
+)
 
 args = input_parser.parse_args()
 
 # Choose the correct gnomAD version
 vcf_key="_".join([args.build, args.gnomad_version, args.gnomad_type])
 # Hash of versions and their VCF locations
-vcf_loc = {
-#    'GRCH38_2.0.1_exomes' : '/gscmnt/gc2560/core/model_data/genome-db-ensembl-gnomad/2dd4b53431674786b760adad60a29273/gnomad.exomes.r2.0.1.sites.GRCh38.noVEP.vcf.gz',
-#    'GRCH38_2.0.1_genomes': '/gscmnt/gc2560/core/model_data/genome-db-ensembl-gnomad/2dd4b53431674786b760adad60a29273/gnomad.genomes.r2.0.1.sites.GRCh38.noVEP.vcf.gz',
-#    'GRCH37_2.0.1_exomes': '/gscmnt/gc2560/core/model_data/genome-db-ensembl-gnomad/e6fedd72a7c046a895e2647f06625171/gnomad.exomes.r2.0.1.sites.noVEP.vcf.gz',
-#    'GRCH37_2.0.1_genomes': '/gscmnt/gc2560/core/model_data/genome-db-ensembl-gnomad/e6fedd72a7c046a895e2647f06625171/gnomad.genomes.r2.0.1.sites.noVEP.vcf.gz'
-    'GRCH37_2.0.1_exomes': 'test_gnomad_chr1part.gz'
-}
+if args.test == None:
+    vcf_loc = {
+        'GRCH38_2.0.1_exomes' : '/gscmnt/gc2560/core/model_data/genome-db-ensembl-gnomad/2dd4b53431674786b760adad60a29273/gnomad.exomes.r2.0.1.sites.GRCh38.noVEP.vcf.gz',
+        'GRCH38_2.0.1_genomes' : '/gscmnt/gc2560/core/model_data/genome-db-ensembl-gnomad/2dd4b53431674786b760adad60a29273/gnomad.genomes.r2.0.1.sites.GRCh38.noVEP.vcf.gz',
+        'GRCH37_2.0.1_exomes' : '/gscmnt/gc2560/core/model_data/genome-db-ensembl-gnomad/e6fedd72a7c046a895e2647f06625171/gnomad.exomes.r2.0.1.sites.noVEP.vcf.gz',
+        'GRCH37_2.0.1_genomes' : '/gscmnt/gc2560/core/model_data/genome-db-ensembl-gnomad/e6fedd72a7c046a895e2647f06625171/gnomad.genomes.r2.0.1.sites.noVEP.vcf.gz'
+    }
+# Points to test file
+else:
+    vcf_loc = {
+        vcf_key : '/gscuser/kkrysiak/git/gnomad_annotation/test_gnomad_chr1part.gz'
+    }
 
 print(vcf_key)
 print("\nUsing gnomAD input: ", vcf_loc[vcf_key])
