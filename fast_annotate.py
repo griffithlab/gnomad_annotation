@@ -1,8 +1,6 @@
 import marisa_trie
 import gzip
 import csv
-import base64
-import hashlib
 
 
 def dict_reader_zipped(dict_filename):
@@ -29,7 +27,6 @@ def dict_reader_unzipped(dict_filename):
             cur_line += 1
             if cur_line % 1000000 == 0:
                 print('Processing line {}'.format(cur_line))
-            # key = base64.b64encode(hashlib.sha1(fields[0].encode()).digest())
             yield (fields[0]), (float(fields[1]), int(fields[2]), int(fields[3]))
         print('Finished processing at line {}'.format(cur_line))
 
@@ -53,10 +50,11 @@ def annotate(mutation_filename, gnomad_annotations):
                 mgi_key = mgi_key.replace("-", "0")
             if mgi_key in gnomad_annotations:
                 gnomad_record = gnomad_annotations[mgi_key]
+                print(gnomad_record)
                 new_line = line.copy()
-                new_line["gnomAD_AC"] = gnomad_record[1]
-                new_line["gnomAD_AN"] = gnomad_record[2]
-                new_line["gnomAD_AF"] = gnomad_record[0]
+                new_line["gnomAD_AC"] = gnomad_record[0][1]
+                new_line["gnomAD_AN"] = gnomad_record[0][2]
+                new_line["gnomAD_AF"] = gnomad_record[0][0]
                 mgi_tsv_writer.writerow(new_line)
             else:
                 new_line = line.copy()
@@ -65,9 +63,8 @@ def annotate(mutation_filename, gnomad_annotations):
                 new_line["gnomAD_AF"] = "NA"
                 mgi_tsv_writer.writerow(new_line)
 
-
-# reader = dict_reader_zipped('/Users/dave/Downloads/gnomad_genome_37_dict.tsv.gz')
 reader = dict_reader_unzipped('gnomad_genome_37_dict.tsv')
 records = marisa_trie.RecordTrie('<fII', reader)
+records.save('my_trie.marisa')
 print('Finished reading records')
 annotate('/gscmnt/gc2547/griffithlab/kkrysiak/lymphoma_group2/filter_variants/756d8642be0a488ca8dcb424d5769ae2/all_variants_whitelist.756d8642be0a488ca8dcb424d5769ae2.chr.coverage.trv.noerror.tsv', records)
