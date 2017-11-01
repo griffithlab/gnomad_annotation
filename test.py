@@ -2,13 +2,24 @@ import csv
 import pickle
 import argparse
 
+## Define imported arguments
 input_parser = argparse.ArgumentParser(
-    description="Create trie stored as pickle file from gnomAD.vcf.gz",
+    description="Annotate a 1-based, 5-column annotated variant file (MGI-annotation style)",
 )
 input_parser.add_argument(
     'gnomad_type',
     choices=['exomes', 'genomes'],
     help="gnomAD data type to use. Whole genome or exome.",
+)
+input_parser.add_argument(
+    'input_file',
+    type=argparse.FileType('r'),
+    help="5 column, 1-based, tab-separated input file with header to be annotated with gnomAD allele frequencies.",
+)
+input_parser.add_argument(
+    'output_file_prefix',
+    type=argparse.FileType('w'),
+    help="Final, gnomAD annotated output file location and name without file extension.",
 )
 input_parser.add_argument(
     '--build',
@@ -23,18 +34,17 @@ input_parser.add_argument(
     help="Version of gnomAD to be used. Default = 2.0.1"
 )
 input_parser.add_argument(
-    'input_file',
-    type=argparse.FileType('r'),
-    help="5 column, 1-based, tab-separated input file with header to be annotated with gnomAD allele frequencies.",
+    '--cutoff',
+    type=float,
+    help="Allele frequency cutoff to use to filter the file. Unless cutoff is defined, all variants are printed to one file."
 )
 input_parser.add_argument(
-    'output_file',
-    type=argparse.FileType('w'),
-    help="Final, gnomAD annotated output .tsv file name and location.",
+    '--add_allele_count',
+    action='store_true',
+    help="Provide allele count and total allele number as well as allele frequency."
 )
 
 args = input_parser.parse_args()
-
 
 # Choose the correct gnomAD version
 vcf_key = "_".join([args.build, args.gnomad_version, args.gnomad_type])
@@ -46,17 +56,46 @@ vcf_loc = {
     'GRCH37_2.0.1_genomes': '/gscmnt/gc2602/griffithlab/kcotto/GRCH37_2.0.1_genomes.trie.pickle'
 }
 
+print("\nUsing gnomAD input: ", vcf_loc[vcf_key])
 
+if args.cutoff != None:
+    print("Using allele frequency cutoff: ", args.cutoff)
+
+# Get the correct file suffix based on whether filtering is happening or not
+if args.cutoff == None:
+    file_out = str(args.output_file_prefix.name + '.tsv')
+else:
+    file_out = str(args.output_file_prefix.name + 'pass.tsv')
+    file_fail_out = str(args.output_file_prefix.name + 'fail.tsv')
+
+# Read in variant file and print new annotated file
 def annotate(mutation_filename, output_filename, gnomad_annotations):
     with open(mutation_filename, "r") as mgi_tsv, open(output_filename, "w") as outfile:
-        print('Beginning comparison')
         mgi_tsv_reader = csv.DictReader(mgi_tsv, delimiter="\t")
         header = mgi_tsv_reader.fieldnames
-        header_new = header + ["gnomAD_AC", "gnomAD_AN", "gnomAD_AF"]
-        mgi_tsv_writer = csv.DictWriter(outfile, fieldnames=header_new, delimiter="\t")
+        ac_head = "gnomAD_AC_"+args.gnomad_type
+        an_head = "gnomAD_AN_"+args.gnomad_type
+        af_head = "gnomAD_AF_"+args.gnomad_type
+        if args.add_allele_count == True:
+            header_new = header + [ac_head,an_head,af_head]
+        else:
+            header_new = header + [af_head]
+        mgi_tsv_writer = csv.DictWriter(outfile, fieldnames=header_new, delimiter="\t",extrasaction='ignore')
         mgi_tsv_writer.writeheader()
+        if args.cutoff != None:
+            fail_file = open(file_fail_out, "w")
+            mgi_tsv_fail_writer = csv.DictWriter(fail_file, fieldnames=header_new, delimiter="\t",extrasaction='ignore')
+            mgi_tsv_fail_writer.writeheader()
+            fail_counter = 0
+            pass_counter = 1
+        counter = 0
+        not_found_counter = 0
+        match_counter = 0
         line_count = 0
+        my_chr = '1'
+        print("\nProcessing chromosome", my_chr)
         for line in mgi_tsv_reader:
+            counter += 1
             line_count += 1
             if line_count % 50000 == 0:
                 print('Processing line {} from inputfile'.format(line_count))
@@ -70,14 +109,31 @@ def annotate(mutation_filename, output_filename, gnomad_annotations):
                 new_line["gnomAD_AC"] = gnomad_record[0][1]
                 new_line["gnomAD_AN"] = gnomad_record[0][2]
                 new_line["gnomAD_AF"] = gnomad_record[0][0]
-                mgi_tsv_writer.writerow(new_line)
+                match_counter += 1
+                if args.cutoff == None:
+                    mgi_tsv_writer.writerow(new_line)
+                else:
+                    if float(new_line[af_head]) >= args.cutoff:
+                        mgi_tsv_fail_writer.writerow(new_line)
+                        fail_counter += 1
+                    else:
+                        mgi_tsv_writer.writerow(new_line)
+                        pass_counter += 1
             else:
                 new_line = line.copy()
-                new_line["gnomAD_AC"] = "NA"
-                new_line["gnomAD_AN"] = "NA"
-                new_line["gnomAD_AF"] = "NA"
+                new_line[ac_head] = "NA"
+                new_line[an_head] = "NA"
+                new_line[af_head] = "NA"
                 mgi_tsv_writer.writerow(new_line)
-
+                not_found_counter += 1
+        print("\nTotal variants processed: ", counter)
+        print("Total variants not found in gnomAD", args.gnomad_type, ": ", not_found_counter)
+        print("Total variants matched gnomAD", args.gnomad_type, ": ", match_counter)
+        if args.cutoff != None:
+            print("Total variants failed allele frequency cutoff of", args.cutoff, ": ", fail_counter)
+            print("Total variants passed allele frequency cutoff of", args.cutoff, ": ", pass_counter)
+            fail_file.close()
+        print("\n")
 
 records = pickle.load(open(vcf_loc[vcf_key], 'rb'))
 print('Finished reading records')

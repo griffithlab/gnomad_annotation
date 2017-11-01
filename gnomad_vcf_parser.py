@@ -9,10 +9,15 @@ class GnomadVcfParser:
         # create a reader object
         line_count=0
         vcf_reader = vcf.Reader(filename=self.path_g_vcf, compressed=True)
+        prog = '1'
+        print("\nReading in gnomAD chromosome ", prog)
         # reads in the vcf line by line
         for line in vcf_reader:
             line_count += 1
-            if line_count % 100000 == 0:
+            if str(line.CHROM) != prog:
+                print("Reading in gnomAD chromosome ", str(line.CHROM))
+                prog = str(line.CHROM)
+            if line_count % 1000000 == 0:
                 print("Processing line {}".format(line_count))
                 sys.stdout.flush()
             # print(line)
@@ -54,5 +59,4 @@ class GnomadVcfParser:
                 ref = ref[1:]
                 # Removing first base of the reference allele so increment position
                 pos += 1
-            # print(pos, ref, alt)
             return pos, ref, alt
