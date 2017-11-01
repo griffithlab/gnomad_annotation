@@ -61,15 +61,14 @@ print("\nUsing gnomAD input: ", vcf_loc[vcf_key])
 if args.cutoff != None:
     print("Using allele frequency cutoff: ", args.cutoff)
 
-# Get the correct file suffix based on whether filtering is happening or not
-if args.cutoff == None:
-    file_out = str(args.output_file_prefix.name + '.tsv')
-else:
-    file_out = str(args.output_file_prefix.name + 'pass.tsv')
-    file_fail_out = str(args.output_file_prefix.name + 'fail.tsv')
+
 
 # Read in variant file and print new annotated file
-def annotate(mutation_filename, file_out, gnomad_annotations):
+def annotate(**kwargs):
+    mutation_filename = kwargs.pop('mutation_filename')
+    file_out = kwargs.pop('file_out')
+    gnomad_annotations = kwargs.pop('gnomad_annotations')
+    file_fail_out = kwargs.pop('file_fail_out', None)
     with open(mutation_filename, "r") as mgi_tsv, open(file_out, "w") as outfile:
         mgi_tsv_reader = csv.DictReader(mgi_tsv, delimiter="\t")
         header = mgi_tsv_reader.fieldnames
@@ -102,9 +101,9 @@ def annotate(mutation_filename, file_out, gnomad_annotations):
                 gnomad_record = gnomad_annotations[mgi_key]
                 # print(gnomad_record)
                 new_line = line.copy()
-                new_line["gnomAD_AC"] = gnomad_record[0][1]
-                new_line["gnomAD_AN"] = gnomad_record[0][2]
-                new_line["gnomAD_AF"] = gnomad_record[0][0]
+                new_line[ac_head] = gnomad_record[0][1]
+                new_line[an_head] = gnomad_record[0][2]
+                new_line[af_head] = gnomad_record[0][0]
                 match_counter += 1
                 if args.cutoff == None:
                     mgi_tsv_writer.writerow(new_line)
@@ -133,4 +132,12 @@ def annotate(mutation_filename, file_out, gnomad_annotations):
 
 records = pickle.load(open(vcf_loc[vcf_key], 'rb'))
 print('Finished reading records')
-annotate(args.input_file.name, args.output_file_prefix.name, records)
+
+# Get the correct file suffix based on whether filtering is happening or not
+if args.cutoff == None:
+    file_out = str(args.output_file_prefix.name + '.tsv')
+    annotate(mutation_filename=args.input_file.name, file_out=file_out, gnomad_annotations=records)
+else:
+    file_out = str(args.output_file_prefix.name + 'pass.tsv')
+    file_fail_out = str(args.output_file_prefix.name + 'fail.tsv')
+    annotate(mutation_filename=args.input_file.name, file_out=file_out, gnomad_annotations=records, file_fail_out=file_fail_out)
