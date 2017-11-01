@@ -1,4 +1,3 @@
-import marisa_trie
 import csv
 import pickle
 import argparse
@@ -41,7 +40,7 @@ args = input_parser.parse_args()
 vcf_key = "_".join([args.build, args.gnomad_version, args.gnomad_type])
 # Hash of versions and their VCF locations
 vcf_loc = {
-    'GRCH38_2.0.1_exomes' : '/gscmnt/gc2602/griffithlab/kcotto/GRCH38_2.0.1_exomes.trie.pickle',
+    'GRCH38_2.0.1_exomes': '/gscmnt/gc2602/griffithlab/kcotto/GRCH38_2.0.1_exomes.trie.pickle',
     'GRCH38_2.0.1_genomes': '/gscmnt/gc2602/griffithlab/kcotto/GRCH38_2.0.1_genomes.trie.pickle',
     'GRCH37_2.0.1_exomes': '/gscmnt/gc2602/griffithlab/kcotto/GRCH37_2.0.1_exomes.trie.pickle',
     'GRCH37_2.0.1_genomes': '/gscmnt/gc2602/griffithlab/kcotto/GRCH37_2.0.1_genomes.trie.pickle'
