@@ -1,62 +1,85 @@
-from gnomad_vcf_parser import GnomadVcfParser
+import marisa_trie
 import csv
-import os
+import pickle
+import argparse
+
+input_parser = argparse.ArgumentParser(
+    description="Create trie stored as pickle file from gnomAD.vcf.gz",
+)
+input_parser.add_argument(
+    'gnomad_type',
+    choices=['exomes', 'genomes'],
+    help="gnomAD data type to use. Whole genome or exome.",
+)
+input_parser.add_argument(
+    '--build',
+    choices=['GRCH37', 'GRCH38'],
+    default='GRCH37',
+    help="Genome build to be used. Default = GRCH37"
+)
+input_parser.add_argument(
+    '--gnomad_version',
+    choices=['2.0.1'],
+    default='2.0.1',
+    help="Version of gnomAD to be used. Default = 2.0.1"
+)
+input_parser.add_argument(
+    'input_file',
+    type=argparse.FileType('r'),
+    help="5 column, 1-based, tab-separated input file with header to be annotated with gnomAD allele frequencies.",
+)
+input_parser.add_argument(
+    'output_file',
+    type=argparse.FileType('w'),
+    help="Final, gnomAD annotated output .tsv file name and location.",
+)
+
+args = input_parser.parse_args()
 
 
-def read_key_list(filename):
-    g_hash = {}
-    print('Reading key list from {}...'.format(filename))
-    with open(filename) as tsvfile:
-        reader = csv.reader(tsvfile, delimiter='\t')
+# Choose the correct gnomAD version
+vcf_key = "_".join([args.build, args.gnomad_version, args.gnomad_type])
+# Hash of versions and their VCF locations
+vcf_loc = {
+    'GRCH38_2.0.1_exomes' : '/gscmnt/gc2602/griffithlab/kcotto/GRCH38_2.0.1_exomes.trie.pickle',
+    'GRCH38_2.0.1_genomes': '/gscmnt/gc2602/griffithlab/kcotto/GRCH38_2.0.1_genomes.trie.pickle',
+    'GRCH37_2.0.1_exomes': '/gscmnt/gc2602/griffithlab/kcotto/GRCH37_2.0.1_exomes.trie.pickle',
+    'GRCH37_2.0.1_genomes': '/gscmnt/gc2602/griffithlab/kcotto/GRCH37_2.0.1_genomes.trie.pickle'
+}
+
+
+def annotate(mutation_filename, output_filename, gnomad_annotations):
+    with open(mutation_filename, "r") as mgi_tsv, open(output_filename, "w") as outfile:
+        print('Beginning comparison')
+        mgi_tsv_reader = csv.DictReader(mgi_tsv, delimiter="\t")
+        header = mgi_tsv_reader.fieldnames
+        header_new = header + ["gnomAD_AC", "gnomAD_AN", "gnomAD_AF"]
+        mgi_tsv_writer = csv.DictWriter(outfile, fieldnames=header_new, delimiter="\t")
+        mgi_tsv_writer.writeheader()
         line_count = 0
-        for line in reader:
+        for line in mgi_tsv_reader:
             line_count += 1
-            if line_count % 1000000 == 0:
-                print('Read in {} lines from dictionary'.format(line_count))
-            gnomad_key = line[0]
-            g_hash[gnomad_key] = {}
-            g_hash[gnomad_key]['af'] = line[1]
-            g_hash[gnomad_key]['ac'] = line[2]
-            # Only one allele number is provided for each position, regardless of # of alternative alleles
-            g_hash[gnomad_key]['an'] = line[3]
-    print('Done reading in key list')
-    return g_hash
+            if line_count % 50000 == 0:
+                print('Processing line {} from inputfile'.format(line_count))
+            mgi_key = "_".join([str(line["chromosome_name"]), str(line["start"]), line["reference"], line["variant"]])
+            if mgi_key not in gnomad_annotations:
+                mgi_key = mgi_key.replace("-", "0")
+            if mgi_key in gnomad_annotations:
+                gnomad_record = gnomad_annotations[mgi_key]
+                # print(gnomad_record)
+                new_line = line.copy()
+                new_line["gnomAD_AC"] = gnomad_record[0][1]
+                new_line["gnomAD_AN"] = gnomad_record[0][2]
+                new_line["gnomAD_AF"] = gnomad_record[0][0]
+                mgi_tsv_writer.writerow(new_line)
+            else:
+                new_line = line.copy()
+                new_line["gnomAD_AC"] = "NA"
+                new_line["gnomAD_AN"] = "NA"
+                new_line["gnomAD_AF"] = "NA"
+                mgi_tsv_writer.writerow(new_line)
 
 
-# check if dictionary exists
-# if it doesn't, then create it
-if not os.path.isfile('gnomad_exome_37_dict.tsv'):
-    parser = GnomadVcfParser("/gscmnt/gc2560/core/model_data/genome-db-ensembl-gnomad/e6fedd72a7c046a895e2647f06625171/gnomad.exomes.r2.0.1.sites.noVEP.vcf.gz")
-    parsed_vcf = parser.parse_vcf('gnomad_exome_37_dict.tsv')
-else:
-    dict = read_key_list('gnomad_exome_37_dict.tsv')
-
-inputfile = '/gscmnt/gc2547/griffithlab/kkrysiak/lymphoma_group2/filter_variants/756d8642be0a488ca8dcb424d5769ae2/all_variants_whitelist.756d8642be0a488ca8dcb424d5769ae2.chr.coverage.trv.noerror.tsv'
-
-with open(inputfile, "r") as mgi_tsv, open("outfile.tsv", "w") as outfile:
-    print('Beginning comparison')
-    mgi_tsv_reader = csv.DictReader(mgi_tsv, delimiter="\t")
-    header = mgi_tsv_reader.fieldnames
-    header_new = header + ["gnomAD_AC","gnomAD_AN","gnomAD_AF"]
-    mgi_tsv_writer = csv.DictWriter(outfile, fieldnames=header_new, delimiter="\t")
-    mgi_tsv_writer.writeheader()
-    line_count = 0
-    for line in mgi_tsv_reader:
-        line_count += 1
-        if line_count %50000 == 0:
-            print('Processing line {} from inputfile'.format(line_count))
-        mgi_key = "_".join([str(line["chromosome_name"]),str(line["start"]),line["reference"],line["variant"]])
-        if mgi_key not in dict:
-            mgi_key = mgi_key.replace("-","0")
-        if mgi_key in dict:
-            new_line = line.copy()
-            new_line["gnomAD_AC"] = dict[mgi_key]['ac']
-            new_line["gnomAD_AN"] = dict[mgi_key]['an']
-            new_line["gnomAD_AF"] = dict[mgi_key]['af']
-            mgi_tsv_writer.writerow(new_line)
-        else:
-            new_line = line.copy()
-            new_line["gnomAD_AC"] = "NA"
-            new_line["gnomAD_AN"] = "NA"
-            new_line["gnomAD_AF"] = "NA"
-            mgi_tsv_writer.writerow(new_line)
+records = pickle.load(open(vcf_loc[vcf_key], 'rb'))
+print('Finished reading records')
+annotate(args.input_file, args.output_file, records)
