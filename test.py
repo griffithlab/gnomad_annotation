@@ -69,8 +69,8 @@ else:
     file_fail_out = str(args.output_file_prefix.name + 'fail.tsv')
 
 # Read in variant file and print new annotated file
-def annotate(mutation_filename, output_filename, gnomad_annotations):
-    with open(mutation_filename, "r") as mgi_tsv, open(output_filename, "w") as outfile:
+def annotate(mutation_filename, file_out, gnomad_annotations):
+    with open(mutation_filename, "r") as mgi_tsv, open(file_out, "w") as outfile:
         mgi_tsv_reader = csv.DictReader(mgi_tsv, delimiter="\t")
         header = mgi_tsv_reader.fieldnames
         ac_head = "gnomAD_AC_"+args.gnomad_type
@@ -88,14 +88,10 @@ def annotate(mutation_filename, output_filename, gnomad_annotations):
             mgi_tsv_fail_writer.writeheader()
             fail_counter = 0
             pass_counter = 1
-        counter = 0
         not_found_counter = 0
         match_counter = 0
         line_count = 0
-        my_chr = '1'
-        print("\nProcessing chromosome", my_chr)
         for line in mgi_tsv_reader:
-            counter += 1
             line_count += 1
             if line_count % 50000 == 0:
                 print('Processing line {} from inputfile'.format(line_count))
@@ -126,7 +122,7 @@ def annotate(mutation_filename, output_filename, gnomad_annotations):
                 new_line[af_head] = "NA"
                 mgi_tsv_writer.writerow(new_line)
                 not_found_counter += 1
-        print("\nTotal variants processed: ", counter)
+        print("\nTotal variants processed: ", line_count)
         print("Total variants not found in gnomAD", args.gnomad_type, ": ", not_found_counter)
         print("Total variants matched gnomAD", args.gnomad_type, ": ", match_counter)
         if args.cutoff != None:
@@ -137,4 +133,4 @@ def annotate(mutation_filename, output_filename, gnomad_annotations):
 
 records = pickle.load(open(vcf_loc[vcf_key], 'rb'))
 print('Finished reading records')
-annotate(args.input_file.name, args.output_file.name, records)
+annotate(args.input_file.name, args.output_file_prefix.name, records)
