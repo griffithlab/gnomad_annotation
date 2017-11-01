@@ -82,4 +82,4 @@ def annotate(mutation_filename, output_filename, gnomad_annotations):
 
 records = pickle.load(open(vcf_loc[vcf_key], 'rb'))
 print('Finished reading records')
-annotate(args.input_file, args.output_file, records)
+annotate(args.input_file.name, args.output_file.name, records)
