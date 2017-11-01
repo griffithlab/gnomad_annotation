@@ -35,8 +35,14 @@ input_parser.add_argument(
 input_parser.add_argument(
     '--cutoff',
     type=float,
-    help="Allele frequency cutoff to use to filter the file. Unless cutoff is defined, all va    riants are printed to one file."
+    help="Allele frequency cutoff to use to filter the file. Unless cutoff is defined, all variants are printed to one file."
 )
+input_parser.add_argument(
+    '--add_allele_count',
+    action='store_true',
+    help="Provide allele count and total allele number as well as allele frequency."
+)
+## Hidden test argument to shorten wait times
 input_parser.add_argument(
     '--test',
     action='store_true',
@@ -77,8 +83,6 @@ else:
     file_out = str(args.output_file_prefix.name + 'pass.tsv')
     file_fail_out = str(args.output_file_prefix.name + 'fail.tsv')
 
-print(file_out)
-
 # Read in variant file and print new annotated file
 with open(args.input_file.name, "r") as mgi_tsv, open(file_out, "w") as outfile:
     mgi_tsv_reader = csv.DictReader(mgi_tsv, delimiter="\t")
@@ -86,12 +90,15 @@ with open(args.input_file.name, "r") as mgi_tsv, open(file_out, "w") as outfile:
     ac_head = "gnomAD_AC_"+args.gnomad_type
     an_head = "gnomAD_AN_"+args.gnomad_type
     af_head = "gnomAD_AF_"+args.gnomad_type
-    header_new = header + [ac_head,an_head,af_head]
-    mgi_tsv_writer = csv.DictWriter(outfile, fieldnames=header_new, delimiter="\t")
+    if args.add_allele_count == True:
+        header_new = header + [ac_head,an_head,af_head]
+    else:
+        header_new = header + [af_head]
+    mgi_tsv_writer = csv.DictWriter(outfile, fieldnames=header_new, delimiter="\t",extrasaction='ignore')
     mgi_tsv_writer.writeheader()
     if args.cutoff != None:
         fail_file = open(file_fail_out, "w")
-        mgi_tsv_fail_writer = csv.DictWriter(fail_file, fieldnames=header_new, delimiter="\t")
+        mgi_tsv_fail_writer = csv.DictWriter(fail_file, fieldnames=header_new, delimiter="\t",extrasaction='ignore')
         mgi_tsv_fail_writer.writeheader()
         fail_counter = 0
         pass_counter = 1
