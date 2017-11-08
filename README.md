@@ -1,6 +1,7 @@
 # gnomad_annotation
 Python package to add gnomAD allele frequencies to MGI annotated files
 - gnomAD exome and genome information are provided separately
+- Preserves all non-redundant columns from the input file
 
 ### Things to note about gnomAD 
 - Does not provide Y chromosome information
