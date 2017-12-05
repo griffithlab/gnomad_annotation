@@ -17,9 +17,9 @@ class GnomadVcfParser:
             if str(line.CHROM) != prog:
                 print("Reading in gnomAD chromosome ", str(line.CHROM))
                 prog = str(line.CHROM)
-            if line_count % 1000000 == 0:
-                print("Processing line {}".format(line_count))
-                sys.stdout.flush()
+            # if line_count % 1000000 == 0:
+            #     print("Processing line {}".format(line_count))
+            #     sys.stdout.flush()
             # print(line)
             # Simultaneously iterates over the three lists (alt allele, alt allele freq, alt allele count)
             # For each iteration i (allele), gets the values at position i (all values for that allele)
@@ -28,8 +28,13 @@ class GnomadVcfParser:
                 new_pos, new_ref, new_alt = GnomadVcfParser.get_minimal_representation(line.POS,line.REF,str(alt))
                 # Uses the chr, start, ref, alt as a hash key to provide INFO field information
                 key = "_".join([str(line.CHROM),str(new_pos),new_ref,new_alt])
+                error_rate = 0
                 if af is not None:
-                    yield key, (float(af), int(ac), int(line.INFO['AN']))
+                    if new_ref == new_alt:
+                        error_rate += 1
+                        if error_rate % 1000 == 0:
+                            print('Error rate = {}'.format(error_rate))
+                        print(key)
 
     # Removes extra bases added to allow for collapsing of nearby indels into multi-allele VCF representation
     # Provides new start, ref, alt
