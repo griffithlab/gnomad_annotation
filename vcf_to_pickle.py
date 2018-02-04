@@ -31,8 +31,8 @@ args = input_parser.parse_args()
 vcf_key = "_".join([args.build, args.gnomad_version, args.gnomad_type])
 # Hash of versions and their VCF locations
 vcf_loc = {
-    'GRCH38_2.0.1_exomes' : '/gscmnt/gc2560/core/model_data/genome-db-ensembl-gnomad/2dd4b53431674786b760adad60a29273/gnomad.exomes.r2.0.1.sites.GRCh38.noVEP.vcf.gz',
-    'GRCH38_2.0.1_genomes': '/gscmnt/gc2560/core/model_data/genome-db-ensembl-gnomad/2dd4b53431674786b760adad60a29273/gnomad.genomes.r2.0.1.sites.GRCh38.noVEP.vcf.gz',
+    'GRCH38_2.0.1_exomes' : '/gscmnt/gc2602/griffithlab/kcotto/fixed_b38_exome.vcf.gz',
+    'GRCH38_2.0.1_genomes': '/gscmnt/gc2602/griffithlab/kcotto/fixed_b38_genome.vcf.gz',
     'GRCH37_2.0.1_exomes': '/gscmnt/gc2560/core/model_data/genome-db-ensembl-gnomad/e6fedd72a7c046a895e2647f06625171/gnomad.exomes.r2.0.1.sites.noVEP.vcf.gz',
     'GRCH37_2.0.1_genomes': '/gscmnt/gc2560/core/model_data/genome-db-ensembl-gnomad/e6fedd72a7c046a895e2647f06625171/gnomad.genomes.r2.0.1.sites.noVEP.vcf.gz'
 }
