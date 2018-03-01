@@ -1,35 +1,50 @@
 import vcf
 import sys
 
+
 class GnomadVcfParser:
     def __init__(self, path_g_vcf):
         self.path_g_vcf = path_g_vcf
+        print(f'path_g_vcf={path_g_vcf}')
 
     def parse_vcf(self):
         # create a reader object
-        line_count=0
+        line_count = 0
+        error_count = 0
         vcf_reader = vcf.Reader(filename=self.path_g_vcf, compressed=True)
         prog = '1'
         print("\nReading in gnomAD chromosome ", prog)
         # reads in the vcf line by line
-        for line in vcf_reader:
-            line_count += 1
-            if str(line.CHROM) != prog:
-                print("Reading in gnomAD chromosome ", str(line.CHROM))
-                prog = str(line.CHROM)
-            if line_count % 1000000 == 0:
-                print("Processing line {}".format(line_count))
-                sys.stdout.flush()
-            # print(line)
-            # Simultaneously iterates over the three lists (alt allele, alt allele freq, alt allele count)
-            # For each iteration i (allele), gets the values at position i (all values for that allele)
-            for alt, af, ac in zip(line.ALT, line.INFO['AF'], line.INFO['AC']):
-                # Uses class method to left align (normalize) the position, ref, alt alleles for single allele representation
-                new_pos, new_ref, new_alt = GnomadVcfParser.get_minimal_representation(line.POS,line.REF,str(alt))
-                # Uses the chr, start, ref, alt as a hash key to provide INFO field information
-                key = "_".join([str(line.CHROM),str(new_pos),new_ref,new_alt])
-                if af is not None:
-                    yield key, (float(af), int(ac), int(line.INFO['AN']))
+        loop = vcf_reader.__iter__()
+        while True:
+            try:
+                line_count += 1
+                line = loop.__next__()
+                if str(line.CHROM) != prog:
+                    print("Reading in gnomAD chromosome ", str(line.CHROM))
+                    prog = str(line.CHROM)
+                if line_count % 1000000 == 0:
+                    print("Processing line {}".format(line_count))
+                    sys.stdout.flush()
+                # print(line)
+                # Simultaneously iterates over the three lists (alt allele, alt allele freq, alt allele count)
+                # For each iteration i (allele), gets the values at position i (all values for that allele)
+                for alt, af, ac in zip(line.ALT, line.INFO['AF'], line.INFO['AC']):
+                    # Uses class method to left align (normalize) the position, ref, alt alleles for single allele representation
+                    new_pos, new_ref, new_alt = GnomadVcfParser.get_minimal_representation(line.POS, line.REF, str(alt))
+                    # Uses the chr, start, ref, alt as a hash key to provide INFO field information
+                    key = "_".join([str(line.CHROM), str(new_pos), new_ref, new_alt])
+                    if af is not None:
+                        yield key, (float(af), int(ac), int(line.INFO['AN']))
+            except StopIteration:
+                break
+            except ValueError:
+                error_count += 1
+                print(line_count)
+                if error_count >= 1000:
+                    break
+                continue
+
 
     # Removes extra bases added to allow for collapsing of nearby indels into multi-allele VCF representation
     # Provides new start, ref, alt
