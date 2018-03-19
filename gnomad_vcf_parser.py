@@ -29,7 +29,12 @@ class GnomadVcfParser:
                 # Uses the chr, start, ref, alt as a hash key to provide INFO field information
                 key = "_".join([str(line.CHROM),str(new_pos),new_ref,new_alt])
                 if af is not None:
-                    yield key, (float(af), int(ac), int(line.INFO['AN']))
+                    yield key, (float(af), int(ac), int(line.INFO['AN']), float(line.INFO['AN_AFR']), int(line.INFO['AC_AFR']), int(line.INFO['AN_AFR']),
+                                float(line.INFO['AN_AMR']), int(line.INFO['AC_AMR']), int(line.INFO['AN_AMR']), float(line.INFO['AN_ASJ']),
+                                int(line.INFO['AC_ASJ']), int(line.INFO['AN_ASJ']), float(line.INFO['AN_EAS']), int(line.INFO['AC_EAS']), int(line.INFO['AN_EAS']),
+                                float(line.INFO['AN_FIN']), int(line.INFO['AC_FIN']), int(line.INFO['AN_FIN']), float(line.INFO['AN_NFE']), int(line.INFO['AC_NFE']),
+                                int(line.INFO['AN_NFE']), float(line.INFO['AN_SAS']), int(line.INFO['AC_SAS']), int(line.INFO['AN_SAS']),
+                                float(line.INFO['AN_OTH']), int(line.INFO['AC_OTH']), int(line.INFO['AN_OTH']))
 
     # Removes extra bases added to allow for collapsing of nearby indels into multi-allele VCF representation
     # Provides new start, ref, alt
