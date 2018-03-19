@@ -44,5 +44,5 @@ print('Writing pickle file to {}.trie.pickle'.format(vcf_key))
 parser = GnomadVcfParser(vcf_loc[vcf_key])
 parsed_vcf = parser.parse_vcf()
 
-records = marisa_trie.RecordTrie('<fII', parsed_vcf, cache_size=marisa_trie.TINY_CACHE)
+records = marisa_trie.RecordTrie('<fIIfIIfIIfIIfIIfIIfIIfIIfII', parsed_vcf, cache_size=marisa_trie.TINY_CACHE)
 pickle.dump(records, open(vcf_key + '.subpopulations.trie.pickle', "wb"))
