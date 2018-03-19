@@ -45,4 +45,4 @@ parser = GnomadVcfParser(vcf_loc[vcf_key])
 parsed_vcf = parser.parse_vcf()
 
 records = marisa_trie.RecordTrie('<fII', parsed_vcf, cache_size=marisa_trie.TINY_CACHE)
-pickle.dump(records, open(vcf_key + '.trie.pickle', "wb"))
+pickle.dump(records, open(vcf_key + '.subpopulations.trie.pickle', "wb"))
