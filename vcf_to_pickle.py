@@ -1,4 +1,5 @@
-from gnomad_vcf_parser import GnomadVcfParser
+from gnomad_vcf_parser import GnomadVcfParserExome
+from gnomad_vcf_parser import GnomadVcfParserGenome
 import marisa_trie
 import pickle
 import argparse
@@ -41,8 +42,14 @@ vcf_loc = {
 print('Using gnomAD input: {}'.format(vcf_loc[vcf_key]))
 print('Writing pickle file to {}.subpopulations.trie.pickle'.format(vcf_key))
 
-parser = GnomadVcfParser(vcf_loc[vcf_key])
-parsed_vcf = parser.parse_vcf()
+if args.gnomad_type == 'exomes':
+    parser = GnomadVcfParserExome(vcf_loc[vcf_key])
+    parsed_vcf = parser.parse_vcf()
+    records = marisa_trie.RecordTrie('<fIIfIIfIIfIIfIIfIIfIIfIIfII', parsed_vcf, cache_size=marisa_trie.TINY_CACHE)
+    pickle.dump(records, open(vcf_key + '.subpopulations.trie.pickle', "wb"))
 
-records = marisa_trie.RecordTrie('<fIIfIIfIIfIIfIIfIIfIIfIIfII', parsed_vcf, cache_size=marisa_trie.TINY_CACHE)
-pickle.dump(records, open(vcf_key + '.subpopulations.trie.pickle', "wb"))
+if args.gnomad_type == 'genomes':
+    parser = GnomadVcfParserGenome(vcf_loc[vcf_key])
+    parsed_vcf = parser.parse_vcf()
+    records = marisa_trie.RecordTrie('<fIIfIIfIIfIIfIIfIIfIIfII', parsed_vcf, cache_size=marisa_trie.TINY_CACHE)
+    pickle.dump(records, open(vcf_key + '.subpopulations.trie.pickle', "wb"))
