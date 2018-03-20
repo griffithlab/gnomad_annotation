@@ -39,7 +39,7 @@ vcf_loc = {
 
 
 print('Using gnomAD input: {}'.format(vcf_loc[vcf_key]))
-print('Writing pickle file to {}.trie.pickle'.format(vcf_key))
+print('Writing pickle file to {}.subpopulations.trie.pickle'.format(vcf_key))
 
 parser = GnomadVcfParser(vcf_loc[vcf_key])
 parsed_vcf = parser.parse_vcf()
