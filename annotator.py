@@ -59,6 +59,22 @@ print("\nUsing gnomAD input: ", vcf_loc[vcf_key])
 if args.cutoff is not None:
     print("Using allele frequency cutoff: ", args.cutoff)
 
+def tsv_header(gnomad_type,add_allele_count):
+    if add_allele_count:
+        tsv = ["AC","AN","AF"]
+    else:
+        tsv = ["AF"]
+    headers = []
+    for t in tsv:
+        headers.append("gnomAD_{}_{}".format(t,gnomad_type))
+    return headers
+
+def trie_header(gnomad_type):
+    trie = ["AF","AC","AN"]
+    headers = []
+    for r in trie:
+        headers.append("gnomAD_{}_{}".format(r,gnomad_type))
+    return headers
 
 # Read in variant file and print new annotated file
 def annotate(**kwargs):
@@ -69,18 +85,12 @@ def annotate(**kwargs):
     with open(mutation_filename, "r") as mgi_tsv, open(file_out, "w") as outfile:
         mgi_tsv_reader = csv.DictReader(mgi_tsv, delimiter="\t")
         header = mgi_tsv_reader.fieldnames
-        ac_head = "gnomAD_AC_"+args.gnomad_type
-        an_head = "gnomAD_AN_"+args.gnomad_type
-        af_head = "gnomAD_AF_"+args.gnomad_type
-        if args.add_allele_count is True:
-            header_new = header + [ac_head, an_head, af_head]
-        else:
-            header_new = header + [af_head]
-        mgi_tsv_writer = csv.DictWriter(outfile, fieldnames=header_new, delimiter="\t", extrasaction='ignore')
+        header_new = header + tsv_header(args.gnomad_type, args.add_allele_count)
+        mgi_tsv_writer = csv.DictWriter(outfile, fieldnames=header_new, delimiter="\t", extrasaction='ignore', restval="NA")
         mgi_tsv_writer.writeheader()
         if args.cutoff is not None:
             fail_file = open(file_fail_out, "w")
-            mgi_tsv_fail_writer = csv.DictWriter(fail_file, fieldnames=header_new, delimiter="\t", extrasaction='ignore')
+            mgi_tsv_fail_writer = csv.DictWriter(fail_file, fieldnames=header_new, delimiter="\t", extrasaction='ignore', restval="NA")
             mgi_tsv_fail_writer.writeheader()
             fail_counter = 0
             pass_counter = 1
@@ -97,14 +107,13 @@ def annotate(**kwargs):
             if mgi_key in gnomad_annotations:
                 gnomad_record = gnomad_annotations[mgi_key]
                 new_line = line.copy()
-                new_line[ac_head] = gnomad_record[0][1]
-                new_line[an_head] = gnomad_record[0][2]
-                new_line[af_head] = gnomad_record[0][0]
+                for index, elem in enumerate(trie_header(args.gnomad_type)):
+                    new_line[elem] = gnomad_record[0][index]
                 match_counter += 1
                 if args.cutoff is None:
                     mgi_tsv_writer.writerow(new_line)
                 else:
-                    if float(new_line[af_head]) >= args.cutoff:
+                    if float(new_line[gnomad_record[0][0]]) >= args.cutoff:
                         mgi_tsv_fail_writer.writerow(new_line)
                         fail_counter += 1
                     else:
@@ -112,9 +121,6 @@ def annotate(**kwargs):
                         pass_counter += 1
             else:
                 new_line = line.copy()
-                new_line[ac_head] = "NA"
-                new_line[an_head] = "NA"
-                new_line[af_head] = "NA"
                 mgi_tsv_writer.writerow(new_line)
                 not_found_counter += 1
         print("\nTotal variants processed: ", line_count)
